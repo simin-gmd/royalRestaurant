@@ -81,6 +81,8 @@ const errors = ref([]);
 const loading = ref(false);
 const props = defineProps(['provinces', 'cities'])
 const cityEl = ref(null);
+const refreshGetAddress = inject('refreshGetAddress');
+
 
 function changeProvince(el) {
     cityEl.value.node.input(props.cities.find((item) => item.province_id == el.target.value).id)
@@ -95,7 +97,8 @@ async function create(formData) {
             body: formData
         })
 
-        reset('createAddress')
+        reset('createAddress');
+        refreshGetAddress();
         toast.success("ایجاد آدرس با موفقیت انجام شد");
     } catch (error) {
         errors.value = Object.values(error.data.data.message).flat();
