@@ -4,12 +4,13 @@
         ایجاد آدرس جدید
     </button>
     <div class="collapse mt-3" id="collapseExample">
-        <div v-if="errors.length > 0" class="alert alert-danger">
-            <ul class="mb-0">
-                <li v-for="(error, index) in errors" :key="index">{{ error }}</li>
-            </ul>
-        </div>
-        <FormKit type="form" @submit="create" #default="{ value }" :incomplete-message="false" :actions="false">
+        <FormKit type="form" id="createAddress" @submit="create" #default="{ value }" :incomplete-message="false"
+            :actions="false">
+            <div v-if="errors.length > 0" class="alert alert-danger">
+                <ul class="mb-0">
+                    <li v-for="(error, index) in errors" :key="index">{{ error }}</li>
+                </ul>
+            </div>
             <div class="card card-body">
                 <div class="row g-4">
                     <div class="col col-md-6">
@@ -25,16 +26,15 @@
                             messages-class="form-text text-danger" />
                     </div>
                     <div class="col col-md-6">
-                        <FormKit type="text" name="postal_code" id="postal_code" label="کد پستی"
-                            label-class="form-label" input-class="form-control"
-                            :validation="[['required'], ['matches', /^\d{5}[ -]?\d{5}$/i]]"
+                        <FormKit type="text" name="postal_code" id="postal_code" label="کد پستی" label-class="form-label"
+                            input-class="form-control" :validation="[['required'], ['matches', /^\d{5}[ -]?\d{5}$/i]]"
                             :validation-messages="{ required: 'فیلد کدپستی الزامیست', 'matches': 'فیلد کدپستی معتبر نمیباشد' }"
                             messages-class="form-text text-danger" />
                     </div>
                     <div class="col col-md-6">
-                        <FormKit type="select" name="province_id" id="province_id" label="استان"
-                            @change="changeProvince" label-class="form-label" input-class="form-select"
-                            validation="required" :validation-messages="{ required: 'فیلد استان الزامیست' }"
+                        <FormKit type="select" name="province_id" id="province_id" label="استان" @change="changeProvince"
+                            label-class="form-label" input-class="form-select" validation="required"
+                            :validation-messages="{ required: 'فیلد استان الزامیست' }"
                             messages-class="form-text text-danger">
                             <option v-for="province in props.provinces" :key="province.id" :value="province.id">
                                 {{ province.name }}
@@ -42,10 +42,9 @@
                         </FormKit>
                     </div>
                     <div class="col col-md-6">
-                        <FormKit type="select" ref="cityEl" name="city_id" id="city_id" label="شهر"
-                            label-class="form-label" input-class="form-select" validation="required"
-                            :validation-messages="{ required: 'فیلد شهر الزامیست' }"
-                            messages-class="form-text text-danger">
+                        <FormKit type="select" ref="cityEl" name="city_id" id="city_id" label="شهر" label-class="form-label"
+                            input-class="form-select" validation="required"
+                            :validation-messages="{ required: 'فیلد شهر الزامیست' }" messages-class="form-text text-danger">
                             <option v-for="city in props.cities.filter((item) => item.province_id == value.province_id)"
                                 :key="city.id" :value="city.id">
                                 {{ city.name }}
@@ -73,6 +72,13 @@
 
 
 <script setup>
+import { useToast } from "vue-toastification";
+import { reset } from "@formkit/core";
+
+
+const toast = useToast()
+const errors = ref([]);
+const loading = ref(false);
 const props = defineProps(['provinces', 'cities'])
 const cityEl = ref(null);
 
@@ -80,20 +86,16 @@ function changeProvince(el) {
     cityEl.value.node.input(props.cities.find((item) => item.province_id == el.target.value).id)
 }
 
-import { useToast } from "vue-toastification";
-
-const toast = useToast()
-const errors = ref([]);
-const loading = ref(false);
-
 async function create(formData) {
     try {
         loading.value = true;
         errors.value = [];
-        await $fetch('/api/profile/addresses/create',{
+        await $fetch('/api/profile/addresses/create', {
             method: 'POST',
-            body: formDate
+            body: formData
         })
+
+        reset('createAddress')
         toast.success("ایجاد آدرس با موفقیت انجام شد");
     } catch (error) {
         errors.value = Object.values(error.data.data.message).flat();
